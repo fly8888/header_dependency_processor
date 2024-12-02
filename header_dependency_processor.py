@@ -31,6 +31,35 @@ class HeaderProcessor:
 
     def _clean_header_content(self, content):
         """清理头文件内容"""
+        # 添加系统结构体列表
+        system_structs = {
+            # 基础图形相关
+            'CGPoint', '_CGPoint', 'CGSize', '_CGSize', 'CGRect', '_CGRect',
+            'CGAffineTransform', '_CGAffineTransform', 'CGVector', '_CGVector',
+            
+            # Foundation 相关
+            'NSRange', '_NSRange', 'NSDirectionalEdgeInsets', '_NSDirectionalEdgeInsets',
+            
+            # UIKit 相关
+            'UIEdgeInsets', '_UIEdgeInsets', 'UIOffset', '_UIOffset',
+            'UIRectEdge', '_UIRectEdge', 'UIFloatRange', '_UIFloatRange',
+            
+            # 文本相关
+            'CGGlyph', '_CGGlyph', 'CGFont', '_CGFont',
+            
+            # CoreVideo 相关
+            'CVBuffer', '_CVBuffer', 'CVImageBuffer', '_CVImageBuffer',
+            'CVPixelBuffer', '_CVPixelBuffer', 'CVTime', '_CVTime',
+            'CVTimeStamp', '_CVTimeStamp', '__CVBuffer',
+            
+            # 其他常见系统结构体
+            'dispatch_time_t', 'dispatch_queue_t', 'dispatch_group_t',
+            'CFRange', '_CFRange', 'CFRunLoopRef', '_CFRunLoopRef',
+            'CMTime', '_CMTime', 'CMTimeRange', '_CMTimeRange',
+            'CLLocationCoordinate2D', '_CLLocationCoordinate2D',
+            'CATransform3D', '_CATransform3D'
+        }
+        
         # 删除 .cxx_destruct 方法
         content = re.sub(r'\s*-\s*\(void\)\.cxx_destruct\s*;', '', content)
         
@@ -59,6 +88,22 @@ class HeaderProcessor:
         if framework_imports:
             content = '\n'.join(sorted(framework_imports)) + '\n\n' + content
             
+        # 处理结构体声明（在成员变量和属性中）
+        content = re.sub(
+            r'struct\s+(_?\w+)\s+(\w+);',
+            lambda m: f'id {m.group(1)} /*  struct {m.group(2)}  */;' 
+            if m.group(1) not in system_structs else m.group(0),
+            content
+        )
+        
+        # 处理方法参数中的结构体
+        content = re.sub(
+            r':\s*\((struct\s+_?\w+\s*\*?)\)',
+            lambda m: f': (id /*  {m.group(1)}  */)'
+            if not any(s in m.group(1) for s in system_structs) else m.group(0),
+            content
+        )
+        
         return content
 
     def _process_imports(self, content):
