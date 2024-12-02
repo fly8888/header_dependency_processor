@@ -37,8 +37,9 @@ class HeaderProcessor:
         # 替换 CDUnknownBlockType 为 id
         content = content.replace('CDUnknownBlockType', 'id')
         
-        # 修改协议声明，去掉 <NSObject>
-        content = re.sub(r'@protocol\s+(\w+)\s*<\s*NSObject\s*>', r'@protocol \1', content)
+        # 修改协议声明，处理各种情况
+        content = re.sub(r'@protocol\s+(\w+)\s*<[^>]+>', r'@protocol \1', content)
+
         
         # 删除 NSObject-Protocol.h 的导入
         content = re.sub(r'#import\s+"NSObject-Protocol\.h"', '', content)
