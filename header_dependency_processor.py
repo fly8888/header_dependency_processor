@@ -154,7 +154,12 @@ class HeaderProcessor:
         """处理单个头文件"""
         if header_path in self.analyzed_files:
             return
-            
+        
+        output_path = os.path.join(self.output_dir, header_path)
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        if os.path.exists(output_path):
+            return
+        
         self.analyzed_files.add(header_path)
         full_path = os.path.join(self.headers_dir, header_path)
         
