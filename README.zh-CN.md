@@ -11,17 +11,21 @@
 - 提供详细的处理日志
 
 ## 使用方法
-1. 配置参数：
-   ```python
-   headers_dir = "原始头文件目录路径"
-   target_header = "需要处理的目标头文件"
-   output_dir = "输出目录路径"
+1. 运行程序并提供必要参数：
+   ```bash
+   python header_dependency_processor.py <source_headers_dir> <output_dir> <wx_header_path>
    ```
 
-2. 运行程序：
-   ```bash
-   python header_dependency_processor.py
-   ```
+   参数说明：
+   - `source_headers_dir`：原始头文件所在目录
+   - `output_dir`：处理后文件的输出目录
+   - `wx_header_path`：Header.h 文件的路径
+
+程序将会：
+- 处理 Header.h 中导入的所有头文件
+- 清理和优化头文件内容
+- 将处理后的文件保存到输出目录
+- 生成详细的处理日志
 
 ## 功能特性
 - 自动清理 .cxx_destruct 方法

@@ -11,17 +11,21 @@ A Python tool for processing and optimizing Objective-C header file dependencies
 - Provides detailed processing logs
 
 ## Usage
-1. Configure parameters:
-   ```python
-   headers_dir = "path/to/original/headers"
-   target_header = "target_header_to_process"
-   output_dir = "path/to/output/directory"
+1. Run the program with required arguments:
+   ```bash
+   python header_dependency_processor.py <source_headers_dir> <output_dir> <wx_header_path>
    ```
 
-2. Run the program:
-   ```bash
-   python header_dependency_processor.py
-   ```
+   Where:
+   - `source_headers_dir`: Directory containing the original header files
+   - `output_dir`: Directory where processed files will be saved
+   - `wx_header_path`: Path to your Header.h file
+
+The script will:
+- Process all headers imported in Header.h
+- Clean and optimize the header contents
+- Save processed files to the output directory
+- Generate detailed logs of the process
 
 ## Features
 - Automatic cleanup of .cxx_destruct methods

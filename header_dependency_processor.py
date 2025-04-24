@@ -4,6 +4,7 @@ import os
 import shutil
 from collections import defaultdict
 import logging
+import sys
 
 class HeaderProcessor:
     def __init__(self, headers_dir, output_dir):
@@ -66,6 +67,8 @@ class HeaderProcessor:
         # 替换 CDUnknownBlockType 为 id
         content = content.replace('CDUnknownBlockType', 'id')
         
+        content = content.replace('#import <ProtobufLite/WXPBGeneratedMessage.h>', '#import "WXPBGeneratedMessage.h"')
+        
         # 修改协议声明，处理各种情况
         content = re.sub(r'@protocol\s+(\w+)\s*<[^>]+>', r'@protocol \1', content)
 
@@ -91,7 +94,7 @@ class HeaderProcessor:
         # 处理结构体声明（在成员变量和属性中）
         content = re.sub(
             r'struct\s+(_?\w+)\s+(\w+);',
-            lambda m: f'id {m.group(1)} /*  struct {m.group(2)}  */;' 
+            lambda m: f'id {m.group(1)} /*  struct {m.group(2)}  */;'
             if m.group(1) not in system_structs else m.group(0),
             content
         )
@@ -214,15 +217,47 @@ class HeaderProcessor:
                 for dep in sorted(deps):
                     self.logger.info(f"    └─ {dep}")
 
+    def process_wx_header(self, wx_header_path):
+        """从WXHeader.h处理所有导入的头文件"""
+        self.logger.info(f"Processing Header.h from: {wx_header_path}")
+        
+        if not os.path.exists(wx_header_path):
+            self.logger.error(f"Header.h not found at {wx_header_path}")
+            return
+
+        try:
+
+            with open(wx_header_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            
+            # 提取所有导入语句
+            import_pattern = r'#import\s+"([^"]+)"'
+            headers_to_process = re.findall(import_pattern, content)
+            
+            self.logger.info(f"Found {len(headers_to_process)} headers to process")
+            
+            # 处理每个头文件
+            for header in headers_to_process:
+                if not os.path.exists(os.path.join(self.output_dir, header)):
+                    self.logger.info(f"Processing: {header}")
+                    self.process_all_dependencies(header)
+                else:
+                    self.logger.info(f"Skipping existing header: {header}")
+                    
+        except Exception as e:
+            self.logger.error(f"Error processing WXHeader.h: {str(e)}")
+            raise
+
 def main():
+    args = sys.argv[1:]
     # 配置参数
-    headers_dir = ""
-    target_header = ""
-    output_dir = ""
+    source_headers_dir = args[0] #原始头文件文件夹
+    output_dir = args[1]         #目的文件夹
+    wx_header_path = args[2]     #自己的头文件
     
     try:
-        processor = HeaderProcessor(headers_dir, output_dir)
-        processor.process_all_dependencies(target_header)
+        processor = HeaderProcessor(source_headers_dir, output_dir)
+        processor.process_wx_header(wx_header_path)
         
     except Exception as e:
         logging.error(f"Fatal error: {str(e)}")
